@@ -34,8 +34,16 @@ async function run() {
 
     app.post('/users', async (req, res) => {
       const user = req.body;
-      const result = await userCollection.insertOne(user);
 
+      // check whether user already exits
+      const query = { email: user.email };
+      const alreadyExits = await userCollection.findOne(query);
+      if (alreadyExits) {
+        return res.send({ message: 'user already exits', insertedId: null })
+      }
+
+      // if not exits then store data
+      const result = await userCollection.insertOne(user);
       res.send(result);
     });
 
