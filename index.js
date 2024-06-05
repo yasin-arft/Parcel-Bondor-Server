@@ -32,6 +32,13 @@ async function run() {
 
     const userCollection = client.db('parcelBondorDB').collection('users');
 
+    // user related apis
+    app.get('/users/:email', async (req, res) => {
+      const query = { email: req.params.email };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
     app.post('/users', async (req, res) => {
       const user = req.body;
 
