@@ -31,6 +31,7 @@ async function run() {
     await client.connect();
 
     const userCollection = client.db('parcelBondorDB').collection('users');
+    const bookingCollection = client.db('parcelBondorDB').collection('bookings');
 
     // user related apis
     app.get('/users/:email', async (req, res) => {
@@ -54,6 +55,13 @@ async function run() {
       res.send(result);
     });
 
+
+    // booking related apis
+    app.post('/bookings', async (req, res) => {
+      const data = req.body;
+      const result = await bookingCollection.insertOne(data);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
