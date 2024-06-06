@@ -57,6 +57,12 @@ async function run() {
 
 
     // booking related apis
+    app.get('/bookings/:email', async (req, res) => {
+      const query = { email: req.params.email };
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.post('/bookings', async (req, res) => {
       const data = req.body;
       const result = await bookingCollection.insertOne(data);
