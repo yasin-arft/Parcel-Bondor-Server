@@ -57,6 +57,12 @@ async function run() {
 
 
     // booking related apis
+    app.get('/booking/:id', async (req, res) => {
+      const query = { _id: new ObjectId(req.params.id) };
+      const result = await bookingCollection.findOne(query);
+      res.send(result);
+    });
+
     app.get('/bookings/:email', async (req, res) => {
       const query = { email: req.params.email };
       const result = await bookingCollection.find(query).toArray();
