@@ -34,6 +34,17 @@ async function run() {
     const bookingCollection = client.db('parcelBondorDB').collection('bookings');
 
     // user related apis
+    app.get('/users', async (req, res) => {
+      const role = req.query.role;
+      let query = {}
+      if (role) {
+        query = { role }
+      }
+
+      const result = await userCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.get('/users/:email', async (req, res) => {
       const query = { email: req.params.email };
       const result = await userCollection.findOne(query);
