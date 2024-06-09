@@ -33,7 +33,8 @@ async function run() {
     const userCollection = client.db('parcelBondorDB').collection('users');
     const bookingCollection = client.db('parcelBondorDB').collection('bookings');
 
-    // user related apis
+    // ----------- user related apis --------------
+    // users by role
     app.get('/users', async (req, res) => {
       const role = req.query.role;
       let query = {}
@@ -45,12 +46,14 @@ async function run() {
       res.send(result);
     });
 
+    // single user
     app.get('/users/:email', async (req, res) => {
       const query = { email: req.params.email };
       const result = await userCollection.findOne(query);
       res.send(result);
     });
 
+    // add users
     app.post('/users', async (req, res) => {
       const user = req.body;
 
@@ -66,31 +69,59 @@ async function run() {
       res.send(result);
     });
 
+    // update user by admin
+    app.patch('/users/adminUpdate/:id', async (req, res) => {
+      const query = { _id: new ObjectId(req.params.id) };
+      const data = req.body;
+      const updatedDoc = {
+        $set: {
+          role: data.role
+        }
+      }
 
-    // booking related apis
+      const result = await userCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    });
+
+
+
+
+    // ----------- booking related apis --------------
+    // all bookings
     app.get('/bookings', async (req, res) => {
       const result = await bookingCollection.find().toArray();
       res.send(result);
     });
 
+    // single booking
     app.get('/booking/:id', async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const result = await bookingCollection.findOne(query);
       res.send(result);
     });
 
+    // booked by user
     app.get('/bookings/:email', async (req, res) => {
       const query = { email: req.params.email };
       const result = await bookingCollection.find(query).toArray();
       res.send(result);
     });
 
+    // booking assigned to delivery man
+    app.get('/bookings/deliveryman/:id', async (req, res) => {
+      const query = { deliveryManId: req.params.id };
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // add bookings
     app.post('/bookings', async (req, res) => {
       const data = req.body;
       const result = await bookingCollection.insertOne(data);
       res.send(result);
     });
 
+    // update booking by user
     app.patch('/bookings/:id', async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const data = req.body;
@@ -115,6 +146,7 @@ async function run() {
       res.send(result);
     });
 
+    // update booking by admin
     app.patch('/bookings/adminUpdate/:id', async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const data = req.body;
@@ -131,6 +163,7 @@ async function run() {
       res.send(result);
     });
 
+    // delete booking by user
     app.delete('/bookings/:id', async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const result = await bookingCollection.deleteOne(query);
