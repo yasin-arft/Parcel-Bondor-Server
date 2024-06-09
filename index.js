@@ -163,6 +163,20 @@ async function run() {
       res.send(result);
     });
 
+    // update booking by deliveryman
+    app.patch('/bookings/deliveryman/:id', async (req, res) => {
+      const query = { _id: new ObjectId(req.params.id) };
+      const data = req.body;
+      const updatedDoc = {
+        $set: {
+          status: data.status
+        }
+      }
+
+      const result = await bookingCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    });
+
     // delete booking by user
     app.delete('/bookings/:id', async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
