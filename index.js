@@ -39,6 +39,7 @@ async function run() {
 
     const userCollection = client.db('parcelBondorDB').collection('users');
     const bookingCollection = client.db('parcelBondorDB').collection('bookings');
+    const reviewCollection = client.db('parcelBondorDB').collection('reviews');
 
     // ----------- user related apis --------------
     // users by role
@@ -191,9 +192,40 @@ async function run() {
       res.send(result);
     });
 
-    // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+    // ----------- review related apis --------------
+    app.post('/reviews', async (req, res) => {
+      const data = req.body;
+
+      // check already whether reviewed
+      const query = { bookingId: data.bookingId };
+      const alreadyExits = await reviewCollection.findOne(query);
+      if (alreadyExits) {
+
+        // if exits then update
+        const updatedDoc = {
+          $set: {
+            rating: data.rating,
+            feedback: data.feedback,
+            date: data.date
+          }
+        }
+
+        const result = await reviewCollection.updateOne(query, updatedDoc);
+        res.send(result);
+      } else {
+
+        // if not exits then add
+        const result = await reviewCollection.insertOne(data);
+        res.send(result);
+      }
+
+    }),
+
+
+      // Send a ping to confirm a successful connection
+      // await client.db("admin").command({ ping: 1 });
+      console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
