@@ -91,6 +91,19 @@ async function run() {
       res.send(result);
     });
 
+    // update user by profile photo
+    app.patch('/users/:id', async (req, res) => {
+      const query = { _id: new ObjectId(req.params.id) };
+      const updatedDoc = {
+        $set: {
+          image: req.body.image
+        }
+      }
+
+      const result = await userCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    });
+
 
 
 
@@ -194,6 +207,7 @@ async function run() {
 
 
     // ----------- review related apis --------------
+    // store reviews
     app.post('/reviews', async (req, res) => {
       const data = req.body;
 
