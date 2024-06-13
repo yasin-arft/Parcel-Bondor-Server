@@ -54,6 +54,54 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/users/user', async (req, res) => {
+      const result = await userCollection.aggregate([
+        {
+          $match: {
+            role: 'user'
+          }
+        },
+        {
+          $lookup: {
+            from: 'bookings',
+            localField: 'email',
+            foreignField: 'email',
+            as: 'myBookings'
+          }
+        },
+        {
+          $addFields: {
+            totalBookings: { $size: '$myBookings' },
+            totalSpent: { $sum: '$myBookings.price' }
+          }
+        },
+        {
+          $project: {
+            email: 1,
+            image: 1,
+            name: 1,
+            phoneNumber: 1,
+            role: 1,
+            totalBookings: 1,
+            totalSpent: 1,
+          }
+        }
+
+        // {
+        //   $unwind: '$myBookings'
+        // },
+        // {
+        //   $group: {
+        //     _id: '$myBookings.email',
+        //     totalBookings: { $sum: 1 },
+        //     totalSpent: {$sum: '$myBookings.price'}
+        //   }
+        // }
+      ]).toArray();
+
+      res.send(result);
+    });
+
     // single user
     app.get('/users/:email', async (req, res) => {
       const query = { email: req.params.email };
