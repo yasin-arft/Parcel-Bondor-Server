@@ -319,6 +319,13 @@ async function run() {
 
 
     // ----------- review related apis --------------
+    app.get('/reviews/:deliveryManId', async (req, res) => {
+      const query = { deliveryManId: req.params.deliveryManId }
+
+      const result = await reviewCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // store reviews
     app.post('/reviews', async (req, res) => {
       const data = req.body;
