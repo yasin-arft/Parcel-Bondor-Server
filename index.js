@@ -54,6 +54,7 @@ async function run() {
       res.send(result);
     });
 
+    // get users with bookings data
     app.get('/users/user', async (req, res) => {
       const result = await userCollection.aggregate([
         {
@@ -77,26 +78,79 @@ async function run() {
         },
         {
           $project: {
-            email: 1,
-            image: 1,
             name: 1,
             phoneNumber: 1,
-            role: 1,
             totalBookings: 1,
             totalSpent: 1,
           }
         }
+      ]).toArray();
 
-        // {
-        //   $unwind: '$myBookings'
-        // },
-        // {
-        //   $group: {
-        //     _id: '$myBookings.email',
-        //     totalBookings: { $sum: 1 },
-        //     totalSpent: {$sum: '$myBookings.price'}
-        //   }
-        // }
+      res.send(result);
+    });
+
+    // get delivery men with delivery data
+    app.get('/users/deliveryman', async (req, res) => {
+      const result = await userCollection.aggregate([
+        {
+          $match: {
+            role: 'deliveryMan'
+          }
+        },
+        {
+          $lookup: {
+            from: 'bookings',
+            let: { userId: { $toString: '$_id' } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$deliveryManId', '$$userId'] },
+                      { $eq: ['$status', 'Delivered'] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'myDeliveries'
+          }
+        },
+        {
+          $lookup: {
+            from: 'reviews',
+            let: { userId: { $toString: '$_id' } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$deliveryManId', '$$userId']
+                  }
+                }
+              }
+            ],
+            as: 'myReviews'
+          }
+        },
+        {
+          $addFields: {
+            totalDelivered: { $size: '$myDeliveries' },
+            averageRatings: {
+              $round: [
+                { $avg: '$myReviews.rating' },
+                1
+              ]
+            }
+          }
+        },
+        {
+          $project: {
+            name: 1,
+            phoneNumber: 1,
+            totalDelivered: 1,
+            averageRatings: 1,
+          }
+        }
       ]).toArray();
 
       res.send(result);
