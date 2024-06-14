@@ -54,6 +54,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/totalUser', async (req, res) => {
+      const query = { role: 'user' };
+      const totalUser = await userCollection.countDocuments(query);
+
+      res.send({ totalUser })
+    });
+
     // get users with bookings data
     app.get('/users/user', async (req, res) => {
       const result = await userCollection.aggregate([
