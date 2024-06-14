@@ -63,6 +63,8 @@ async function run() {
 
     // get users with bookings data
     app.get('/users/user', async (req, res) => {
+      const page = req.query.page;
+
       const result = await userCollection.aggregate([
         {
           $match: {
@@ -91,7 +93,7 @@ async function run() {
             totalSpent: 1,
           }
         }
-      ]).toArray();
+      ]).skip(page * 5).limit(5).toArray();
 
       res.send(result);
     });
