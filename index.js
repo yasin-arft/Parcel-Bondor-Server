@@ -219,6 +219,28 @@ async function run() {
 
 
     // ----------- booking related apis --------------
+    // bookings state
+    app.get('/bookingStats', async (req, res) => {
+      const result = await bookingCollection.aggregate([
+        {
+          $project: {
+            date: { $substr: ["$bookingDate", 0, 10] }
+          }
+        },
+        {
+          $group: {
+            _id: "$date",
+            totalBookings: { $sum: 1 }
+          }
+        },
+        {
+          $sort: { _id: 1 }
+        }
+      ]).toArray();
+
+      res.send(result);
+    });
+
     // all bookings
     app.get('/bookings', async (req, res) => {
       const queries = req.query;
@@ -231,7 +253,7 @@ async function run() {
           }
         }
       }
-      
+
       const result = await bookingCollection.find(filter).toArray();
       res.send(result);
     });
