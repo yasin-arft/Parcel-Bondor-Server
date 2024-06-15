@@ -221,7 +221,18 @@ async function run() {
     // ----------- booking related apis --------------
     // all bookings
     app.get('/bookings', async (req, res) => {
-      const result = await bookingCollection.find().toArray();
+      const queries = req.query;
+      let filter = {}
+      if (queries.fromDate && queries.toDate) {
+        filter = {
+          requestedDeliveryDate: {
+            $gte: queries.fromDate,
+            $lte: queries.toDate
+          }
+        }
+      }
+      
+      const result = await bookingCollection.find(filter).toArray();
       res.send(result);
     });
 
