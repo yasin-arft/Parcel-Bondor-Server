@@ -18,14 +18,7 @@ const client = new MongoClient(uri, {
 });
 
 // middlewares
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "https://parcel-bondor.web.app",
-    "https://parcel-bondor.firebaseapp.com",
-  ]
-}));
+app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
