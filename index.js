@@ -219,6 +219,15 @@ async function run() {
 
 
     // ----------- booking related apis --------------
+    // home states
+    app.get('/homeStats', async (req, res) => {
+      const totalBookings = await bookingCollection.estimatedDocumentCount();
+      const totalDelivered = await bookingCollection.countDocuments({ status: 'Delivered' });
+      const totalUsers = await userCollection.estimatedDocumentCount();
+
+      res.send({ totalBookings, totalDelivered, totalUsers })
+    });
+
     // bookings state
     app.get('/bookingStats', async (req, res) => {
       const result = await bookingCollection.aggregate([
