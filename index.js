@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
@@ -31,6 +32,12 @@ app.get('/', (req, res) => {
   res.send('Parcel Bondor server is running')
 });
 
+// jwt api 
+app.post('/jwt', async (req, res) => {
+  const user = req.body;
+  const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+  res.send({ token });
+});
 
 async function run() {
   try {
