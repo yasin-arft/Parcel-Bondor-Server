@@ -165,6 +165,82 @@ async function run() {
       res.send(result);
     });
 
+    // top 3 delivery men
+    app.get('/topThreeDeliverymen', async (req, res) => {
+      const result = await userCollection.aggregate([
+        {
+          $match: {
+            role: 'deliveryMan'
+          }
+        },
+        {
+          $lookup: {
+            from: 'bookings',
+            let: { userId: { $toString: '$_id' } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$deliveryManId', '$$userId'] },
+                      { $eq: ['$status', 'Delivered'] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'myDeliveries'
+          }
+        },
+        {
+          $lookup: {
+            from: 'reviews',
+            let: { userId: { $toString: '$_id' } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$deliveryManId', '$$userId']
+                  }
+                }
+              }
+            ],
+            as: 'myReviews'
+          }
+        },
+        {
+          $addFields: {
+            totalDelivered: { $size: '$myDeliveries' },
+            averageRatings: {
+              $round: [
+                { $avg: '$myReviews.rating' },
+                1
+              ]
+            }
+          }
+        },
+        {
+          $project: {
+            name: 1,
+            image: 1,
+            totalDelivered: 1,
+            averageRatings: 1,
+          }
+        },
+        {
+          $sort: {
+            totalDelivered: -1,
+            averageRatings: -1
+          }
+        },
+        {
+          $limit: 3
+        }
+      ]).toArray();
+
+      res.send(result);
+    });
+
     // single user
     app.get('/users/:email', async (req, res) => {
       const query = { email: req.params.email };
