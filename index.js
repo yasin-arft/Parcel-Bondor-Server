@@ -39,6 +39,23 @@ app.post('/jwt', async (req, res) => {
   res.send({ token });
 });
 
+// middlewares
+const verifyToken = (req, res, next) => {
+  if (!req.headers.authorization) {
+    return res.status(401).send({ message: 'unauthorized' })
+  }
+  const token = req.headers.authorization.split(' ')[1];
+  console.log('token', token);
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
+    if (error) {
+      return res.status(401).send({ message: 'unauthorized' });
+    }
+    console.log(decoded);
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -50,7 +67,7 @@ async function run() {
 
     // ----------- user related apis --------------
     // users by role
-    app.get('/users', async (req, res) => {
+    app.get('/users', verifyToken, async (req, res) => {
       const role = req.query.role;
       let query = {}
       if (role) {
@@ -69,7 +86,7 @@ async function run() {
     });
 
     // get users with bookings data
-    app.get('/users/user', async (req, res) => {
+    app.get('/users/user', verifyToken, async (req, res) => {
       const page = req.query.page;
 
       const result = await userCollection.aggregate([
@@ -106,7 +123,7 @@ async function run() {
     });
 
     // get delivery men with delivery data
-    app.get('/users/deliveryman', async (req, res) => {
+    app.get('/users/deliveryman', verifyToken, async (req, res) => {
       const result = await userCollection.aggregate([
         {
           $match: {
@@ -272,7 +289,7 @@ async function run() {
     });
 
     // update user by admin
-    app.patch('/users/adminUpdate/:id', async (req, res) => {
+    app.patch('/users/adminUpdate/:id', verifyToken, async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const data = req.body;
       const updatedDoc = {
@@ -285,8 +302,8 @@ async function run() {
       res.send(result);
     });
 
-    // update user by profile photo
-    app.patch('/users/:id', async (req, res) => {
+    // update user profile photo
+    app.patch('/users/:id', verifyToken, async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const updatedDoc = {
         $set: {
@@ -312,7 +329,7 @@ async function run() {
     });
 
     // bookings state
-    app.get('/bookingStats', async (req, res) => {
+    app.get('/bookingStats', verifyToken, async (req, res) => {
       const result = await bookingCollection.aggregate([
         {
           $project: {
@@ -334,7 +351,7 @@ async function run() {
     });
 
     // all bookings
-    app.get('/bookings', async (req, res) => {
+    app.get('/bookings', verifyToken, async (req, res) => {
       const queries = req.query;
       let filter = {}
       if (queries.fromDate && queries.toDate) {
@@ -351,14 +368,14 @@ async function run() {
     });
 
     // single booking
-    app.get('/booking/:id', async (req, res) => {
+    app.get('/booking/:id', verifyToken, async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const result = await bookingCollection.findOne(query);
       res.send(result);
     });
 
     // booked by user
-    app.get('/bookings/:email', async (req, res) => {
+    app.get('/bookings/:email', verifyToken, async (req, res) => {
       let filter = {
         email: req.params.email
       };
@@ -375,21 +392,21 @@ async function run() {
     });
 
     // booking assigned to delivery man
-    app.get('/bookings/deliveryman/:id', async (req, res) => {
+    app.get('/bookings/deliveryman/:id', verifyToken, async (req, res) => {
       const query = { deliveryManId: req.params.id };
       const result = await bookingCollection.find(query).toArray();
       res.send(result);
     });
 
     // add bookings
-    app.post('/bookings', async (req, res) => {
+    app.post('/bookings', verifyToken, async (req, res) => {
       const data = req.body;
       const result = await bookingCollection.insertOne(data);
       res.send(result);
     });
 
     // update booking by user
-    app.patch('/bookings/:id', async (req, res) => {
+    app.patch('/bookings/:id', verifyToken, async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const data = req.body;
       const updatedDoc = {
@@ -414,7 +431,7 @@ async function run() {
     });
 
     // update booking by admin
-    app.patch('/bookings/adminUpdate/:id', async (req, res) => {
+    app.patch('/bookings/adminUpdate/:id', verifyToken, async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const data = req.body;
       const updatedDoc = {
@@ -431,7 +448,7 @@ async function run() {
     });
 
     // update booking by deliveryman
-    app.patch('/bookings/deliveryman/:id', async (req, res) => {
+    app.patch('/bookings/deliveryman/:id', verifyToken, async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const data = req.body;
       const updatedDoc = {
@@ -445,7 +462,7 @@ async function run() {
     });
 
     // delete booking by user
-    app.delete('/bookings/:id', async (req, res) => {
+    app.delete('/bookings/:id', verifyToken, async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
       const result = await bookingCollection.deleteOne(query);
       res.send(result);
@@ -453,7 +470,7 @@ async function run() {
 
 
     // ----------- review related apis --------------
-    app.get('/reviews/:deliveryManId', async (req, res) => {
+    app.get('/reviews/:deliveryManId', verifyToken, async (req, res) => {
       const query = { deliveryManId: req.params.deliveryManId }
 
       const result = await reviewCollection.find(query).toArray();
@@ -461,7 +478,7 @@ async function run() {
     });
 
     // store reviews
-    app.post('/reviews', async (req, res) => {
+    app.post('/reviews', verifyToken, async (req, res) => {
       const data = req.body;
 
       // check already whether reviewed
