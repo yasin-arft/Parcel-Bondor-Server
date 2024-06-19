@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
@@ -38,12 +39,12 @@ const verifyToken = (req, res, next) => {
     return res.status(401).send({ message: 'unauthorized' })
   }
   const token = req.headers.authorization.split(' ')[1];
-  console.log('token', token);
+
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
     if (error) {
       return res.status(401).send({ message: 'unauthorized' });
     }
-    console.log(decoded);
+
     req.decoded = decoded;
     next();
   });
@@ -499,10 +500,27 @@ async function run() {
 
     }),
 
+      // payment intent
+      app.post("/create-payment-intent", async (req, res) => {
+        const { price } = req.body;
 
-      // Send a ping to confirm a successful connection
-      // await client.db("admin").command({ ping: 1 });
-      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: parseInt(price * 100),
+          currency: "bdt",
+          payment_method_types: [
+            "card"
+          ],
+        });
+
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      });
+
+
+    // Send a ping to confirm a successful connection
+    // await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
